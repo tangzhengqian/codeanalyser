@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%X{module}|%X{ip}|%d{yyyy.MM.dd HH:mm:ss.SSS z, GMT+8}|%-5level|%t|%F:%L|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CANALY" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>logs/canaly.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <FileNamePattern>logs/canaly-%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+            <MaxHistory>10</MaxHistory>
+            <MaxFileSize>64mb</MaxFileSize>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <pattern>%X{module}|%X{ip}|%d{yyyy.MM.dd HH:mm:ss.SSS z, GMT+8}|%-5level|%t|%F:%L|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="RestCallRollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>logs/api_canaly.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <FileNamePattern>logs/api_canaly-%d{yyyy-MM-dd}.%i.log.gz</FileNamePattern>
+            <MaxHistory>10</MaxHistory>
+            <MaxFileSize>256mb</MaxFileSize>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <pattern>%X{module}|%X{ip}|%d{yyyy.MM.dd HH:mm:ss.SSS z, GMT+8}|%-5level|%t|%F:%L|%msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="HEARTBEAT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>logs/canaly-heartbeat.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <FileNamePattern>logs/canaly-heartbeat-%d{yyyy-MM-dd}.%i.log.gz</FileNamePattern>
+            <MaxHistory>10</MaxHistory>
+            <MaxFileSize>256mb</MaxFileSize>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>UTF-8</charset>
+            <pattern>%X{module}|%X{ip}|%d{yyyy.MM.dd HH:mm:ss.SSS z, GMT+8}|%-5level|%t|%F:%L|%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.testbird.util.common.Slf4jLogMessageObserver" level="DEBUG" additivity="false">
+        <appender-ref ref="RestCallRollingFile"/>
+        <appender-ref ref="Console"/>
+    </logger>
+    <logger name="io.netty" level="WARN" additivity="false">
+        <appender-ref ref="CANALY"/>
+        <appender-ref ref="Console"/>
+    </logger>
+    <logger name="com.testbird.util.codeanalyser" level="DEBUG" additivity="false">
+        <appender-ref ref="CANALY"/>
+        <appender-ref ref="Console"/>
+    </logger>
+    <logger name="org.quartz" level="DEBUG" additivity="false">
+        <appender-ref ref="HEARTBEAT"/>
+    </logger>
+    <logger name="io.netty" level="WARN" additivity="false">
+        <appender-ref ref="CANALY"/>
+        <appender-ref ref="Console"/>
+    </logger>
+
+    <root level="trace">
+        <appender-ref ref="CANALY"/>
+        <appender-ref ref="Console"/>
+    </root>
+
+</configuration>

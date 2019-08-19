@@ -1,0 +1,21 @@
+{
+    "maxTaskCount": 4,
+    "ignoreFileTypes": ["png", "jpeg", "jpg", "bmp", "gif", "tif", "tiff", "svg", "odg",
+        "wav", "mp3",
+        "avi", "flv", "wmv", "mov", "mp4", "mkv", "rm", "rmvb", "asf",
+        "mpg", "mpeg", "mpe", "m4v", "3gp", "3gpp", "3g2", "3gpp2",
+        "doc", "docx", "ppt", "pptx", "xls", "xlsx", "pdf",
+        "exe", "msi", "dll", "lib", "so",
+        "jar", "class", "war"],
+    "ignoreFiles": ["jquery.*\\.js", "vue.*\\.js", "bootstrap.*\\.js"],
+    "commentLinePatterns":["", null, "  ", " //", "//", "/*", "#"],
+    "verbose": true,
+    "ignoreSvnServerSSLCert": true,
+    "javaExts": ["java"],
+    "jsExts": ["js"],
+    "cAndCppExts": ["c", "cc", "cp", "cxx", "cpp", "c++", "h", "hpp", "hh", "hxx", "h++"],
+    "pyExts": ["py"],
+    "htmlExts": ["html"],
+    "cSharpExts": ["cs"],
+    "maxMatchStringLen": 2048
+}

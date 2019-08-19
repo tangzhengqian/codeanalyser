@@ -1,0 +1,96 @@
+plugins {
+    id 'java'
+}
+
+group 'com.testbird'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    compile 'org.codehaus.groovy:groovy-all:2.3.11'
+    compile 'net.sf.kxml:kxml2:2.3.0'
+    compile 'org.quartz-scheduler:quartz:2.3.0'
+    compile 'com.squareup.okhttp3:okhttp:3.9.1'
+    compile 'org.apache.commons:commons-exec:1.3'
+    compile 'com.strategicgains:RestExpress:0.11.3'
+    compile 'org.apache.commons:commons-lang3:3.6'
+    compile 'commons-io:commons-io:2.5'
+    compile 'org.apache.httpcomponents:httpclient:4.5.3'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+}
+
+task codeAnalyserJar(type: Jar) {
+    baseName 'code-analyser'
+    sourceSets.main.java.srcDirs = ['src/main/java']
+    include (['com/testbird/util/**'])
+    sourceSets.main.resources.srcDirs = ['src/main/resources']
+    include (['logback_canaly.xml', 'tag'])
+    manifest {
+        attributes(
+                'Manifest-Version': 1.0,
+                'Main-Class': 'com.testbird.util.codeanalyser.Main',
+                'Class-Path': configurations.compile.collect { "lib/${it.name}" }.join(' '))
+    }
+    with jar
+}
+
+task makeTag()  {
+    String version = System.getenv("VERSION") ?: System.getenv("USER")
+    String buildNumber = System.getenv("BUILD_NUMBER") ?: new Date()
+    String commit = System.getenv("COMMIT") ?: System.properties['os.name']
+    new File("$projectDir/src/main/resources/tag").text = """$version-$buildNumber-$commit"""
+}
+
+task cleanTag() {
+    doLast{
+        new File("$projectDir/src/main/resources/tag").delete()
+    }
+}
+
+task copyRuntimes(type: Copy) {
+    dependsOn jar
+    outputs.upToDateWhen { false }
+    from configurations.runtime
+    into "$buildDir/libs/lib"
+}
+
+task copyScripts(type: Copy) {
+    from "$projectDir/functions.sh"
+    from "$projectDir/run.sh"
+    from "$projectDir/run_tc.sh"
+    from "$projectDir/run_code_analysis.sh"
+    from "$projectDir/service.env.template"
+    from "$projectDir/keywords_analysis.json"
+    into "$buildDir/libs"
+}
+
+tasks.build.dependsOn copyScripts, copyRuntimes, makeTag, cleanTag, codeAnalyserJar
+
+task copyCanalyDistFiles(type: Copy) {
+    from "$buildDir/libs/code-analyser.jar"
+    from "$buildDir/libs/functions.sh"
+    from "$buildDir/libs/run_code_analysis.sh"
+    from "$buildDir/libs/service.env.template"
+    from "$buildDir/libs/keywords_analysis.json"
+    from "$buildDir/resources/main/tag"
+    into "$buildDir/zip_canaly/code-analysis"
+}
+
+task copyCanalyDistLibs(type: Copy) {
+    from "$buildDir/libs/lib"
+    exclude 'isb/**', 'script-service.jar', 'qiniu-*', 'dom4j-*', 'amqp-*', 'Java-WebSocket-*', 'junit-*'
+    into "$buildDir/zip_canaly/code-analysis/lib"
+}
+
+task canalyDistZip(type: Zip) {
+    from 'build/zip_canaly'
+    baseName 'code-analysis'
+    destinationDir new File('build/distributions')
+}
+tasks.canalyDistZip.dependsOn build, copyCanalyDistLibs, copyCanalyDistFiles
