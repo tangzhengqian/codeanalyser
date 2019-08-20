@@ -11,7 +11,7 @@ svn code analyser for testbird TROC team
 * 配置`FILE_SERVER_URL`参数为当前文件服务器的上传地址. *quail域名没变的话无需修改*
 * `keywords_analysis.json` 文件中配置了需要扫描的文件的后缀和忽略文件等信息. *基本无需改动*
 * 启动服务命令`./run_code_analysis.sh server`
-* 最后在服务器的`service.env`配置文件中配置参数`SCAN_URL`为`http://{code_analysis服务运行的IP}:7400`, 并重启服务器. *假如code_analysis服务运行在10.10.10.16的电脑上, 则配置`SCAN_URL=http://10.10.10.17:7400`*
+* 最后在服务器的`service.env`配置文件中配置参数`SCAN_URL`为`http://{code_analysis服务运行的IP}:7400`, 并重启服务器. *假如code_analysis服务运行在10.10.10.16的电脑上, 则配置`SCAN_URL=http://10.10.10.16:7400`*
 # 功能说明
 * Main-class为`com.testbird.util.codeanalyser.Main`
 * Main启动RestFul的http server, 监听`/keywords/search`和`/keywords/stop`接口请求.
