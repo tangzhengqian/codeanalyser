@@ -1,13 +1,8 @@
 package com.testbird.util.codeanalyser;
 
 import com.testbird.util.common.FileUtil;
-import com.testbird.util.common.GlobalScheduler;
 import com.testbird.util.common.NetworkUtils;
 import com.testbird.util.common.Slf4jLogMessageObserver;
-
-import com.testbird.util.common.exception.InitDeInitException;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.restexpress.RestExpress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,19 +21,9 @@ public class Main {
 
     private static RestExpress restExpress;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         LOGGER.info("Keywords Analyser version: {}", FileUtil.getReleaseVersion());
         Config.loadKeywordsAnalysisConfig();
-
-        Scheduler scheduler = GlobalScheduler.getInstance();
-        try {
-            scheduler.start();
-        } catch (SchedulerException e) {
-            LOGGER.error("Start GlobalScheduler error: {}", e.getMessage(), e);
-            throw new InitDeInitException("GlobalScheduler start fail", e.getMessage());
-        }
-        LOGGER.info(">>>>>>>>>>>>> GlobalScheduler start over");
-        TaskCheckJob.start();
 
         restExpress = initializeServer();
         Thread restExpressThread = new Thread(() -> restExpress.awaitShutdown());
