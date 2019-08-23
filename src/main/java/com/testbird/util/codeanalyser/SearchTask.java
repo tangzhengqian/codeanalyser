@@ -27,6 +27,9 @@ import java.util.concurrent.TimeUnit;
 import static com.testbird.util.codeanalyser.Config.getTaskBaseDir;
 import static com.testbird.util.codeanalyser.Config.getTaskResultFile;
 
+/**
+ * 扫描关键字任务
+ */
 public class SearchTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(SearchTask.class);
     SearchKeywordsRequest request;
@@ -36,10 +39,10 @@ public class SearchTask implements Runnable {
     volatile boolean canceled;
     volatile boolean finished;
     String errMsg;
-    SearchKeywordsResult result;
+    SearchKeywordsResult result;//扫描结果
 
-    Object cancelSync = new Object();
-    Object finishSync = new Object();
+    Object cancelSync = new Object();//同步锁对象
+    Object finishSync = new Object();//同步锁对象
 
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -105,6 +108,12 @@ public class SearchTask implements Runnable {
         logger.info("{} cancel task end.", request.key);
     }
 
+    /**
+     * 任务完成
+     * 1. 生成SearchKeywordsResponse
+     * 2. 保存result到文件
+     * 3. 上传SearchKeywordsResponse, 并上传结果文件
+     */
     void taskFinished() {
         response = new SearchKeywordsResponse();
         response.result.key = request.key;
@@ -140,6 +149,9 @@ public class SearchTask implements Runnable {
         }
     }
 
+    /**
+     * 处理扫描结果, 最后删除任务, 并标记完成
+     */
     void handleSearchResult() {
         logger.info("Handle task result:\n{}", result);
         boolean ok = false;
@@ -162,6 +174,11 @@ public class SearchTask implements Runnable {
         }
     }
 
+    /**
+     * 任务成功, 上传result文件, 并上传Response到服务器
+     * @return
+     * @throws IOException
+     */
     boolean handleTaskSucceed() throws IOException {
         String resultFilePath = getTaskResultFile(request.key);
         File resultFile = new File(resultFilePath);
@@ -182,6 +199,10 @@ public class SearchTask implements Runnable {
         }
     }
 
+    /**
+     * 任务失败, 只上传Response到服务器
+     * @return
+     */
     boolean handleTaskFail() {
         return notifySearchResult();
     }
@@ -220,6 +241,11 @@ public class SearchTask implements Runnable {
         }
     }
 
+    /**
+     * 保存扫描结果到result文件, 使用JsonGenerator为了避免内存移除
+     * @param resultFilePath
+     * @throws IOException
+     */
     private void saveSearchResult(String resultFilePath) throws IOException {
         File tmpResultFile = new File(Config.getTaskTmpResultFile(result.key));
         if (tmpResultFile.isFile()) {
@@ -286,6 +312,13 @@ public class SearchTask implements Runnable {
         }
     }
 
+    /**
+     * 上传文件
+     * @param filePath
+     * @param nRetry
+     * @param timeout
+     * @return
+     */
     private boolean uploadFileWithRetry(String filePath, int nRetry, long timeout) {
         boolean result = true;
         while (nRetry-- > 0) {
@@ -304,6 +337,10 @@ public class SearchTask implements Runnable {
         return result;
     }
 
+    /**
+     * 上传response
+     * @return
+     */
     private boolean notifySearchResult() {
         String respNotifUrl = Config.getRespNotifUrl();
         logger.info("Sending search response {}, {}: {}", respNotifUrl, response.result.key, JsonTransfer.toJsonFormatString(response));

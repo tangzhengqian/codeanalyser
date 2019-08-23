@@ -11,11 +11,11 @@ import org.slf4j.LoggerFactory;
    need to set env var TB_NET_INTERFACE_NAME, FILE_SERVER_URL
  */
 public class Main {
-    static { System.setProperty("logback.configurationFile", "logback_canaly.xml"); }
+    static { System.setProperty("logback.configurationFile", "logback_canaly.xml"); }//设置logback的配置文件名称
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private static final String SERVICE_NAME = "keywords_analyser";
 
-    private static final int REST_SERVER_PORT = 7400;
+    private static final int REST_SERVER_PORT = 7400; //Rest Server端口
     private static final int REST_THREAD_POOL_SIZE = 20;
     private static final int REQUEST_MAX_CONTENT_SIZE = 1024 * 1024 * 100;
 
@@ -23,7 +23,7 @@ public class Main {
 
     public static void main(String[] args) {
         LOGGER.info("Keywords Analyser version: {}", FileUtil.getReleaseVersion());
-        Config.loadKeywordsAnalysisConfig();
+        Config.loadKeywordsAnalysisConfig();//加载配置文件
 
         restExpress = initializeServer();
         Thread restExpressThread = new Thread(() -> restExpress.awaitShutdown());
@@ -35,6 +35,10 @@ public class Main {
         }
     }
 
+    /**
+     * 初始化Rest Server
+     * @return
+     */
     private static RestExpress initializeServer() {
         LOGGER.info("Starting server on {}:{}", NetworkUtils.getIPAddress(), REST_SERVER_PORT);
         // RestExpress.setDefaultSerializationProvider(new SerializationProvider());
@@ -43,7 +47,7 @@ public class Main {
                 .setBaseUrl(String.format("http://%s:%s", NetworkUtils.getIPAddress(), REST_SERVER_PORT))
                 .setExecutorThreadCount(REST_THREAD_POOL_SIZE)
                 .setMaxContentSize(REQUEST_MAX_CONTENT_SIZE)
-                .addMessageObserver(new Slf4jLogMessageObserver());
+                .addMessageObserver(new Slf4jLogMessageObserver());//设置请求消息监听, 打印日志
         Routes.define(server);
         server.bind(REST_SERVER_PORT);
         LOGGER.info("Starting server succeed.");

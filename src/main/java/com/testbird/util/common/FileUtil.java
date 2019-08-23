@@ -156,6 +156,10 @@ public class FileUtil {
         return false;
     }
 
+    /**
+     * 获取当前版本的TAG信息（gradle编译的时候会把信息写到resources/tag文件中）
+     * @return
+     */
     public static String getReleaseVersion() {
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(FileUtil.class.getResourceAsStream("/tag")))) {

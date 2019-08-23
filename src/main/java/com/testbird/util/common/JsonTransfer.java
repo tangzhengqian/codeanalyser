@@ -9,6 +9,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * json转化工具类
+ */
 public class JsonTransfer {
     private static final Logger LOGGER = LoggerFactory.getLogger(JsonTransfer.class);
     private static final ObjectMapper sObjectMapper = new ObjectMapper();

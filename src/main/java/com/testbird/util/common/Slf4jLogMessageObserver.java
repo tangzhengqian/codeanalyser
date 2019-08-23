@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by penghongqin on 16-3-2.
+ * 消息监听并处理, 主要用于日志打印
  */
 public class Slf4jLogMessageObserver extends MessageObserver {
     private static final Logger sLogger = LoggerFactory.getLogger(Slf4jLogMessageObserver.class);

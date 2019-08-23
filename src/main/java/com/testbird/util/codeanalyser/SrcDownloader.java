@@ -12,6 +12,9 @@ import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * svn下载工具类
+ */
 public class SrcDownloader {
     private static final Logger logger = LoggerFactory.getLogger(SrcDownloader.class);
 

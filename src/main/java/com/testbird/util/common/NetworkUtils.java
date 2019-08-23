@@ -29,35 +29,6 @@ public class NetworkUtils {
         return IP_ADDRESS;
     }
 
-    public static String getMacAddress() {
-        if (StringUtils.isEmpty(MAC_ADDRESS)) {
-            InetAddress address = getAddress();
-            if (address != null) {
-                try {
-                    NetworkInterface networkInterface = NetworkInterface.getByInetAddress(address);
-                    byte[] macByte = networkInterface.getHardwareAddress();
-                    if (macByte != null && macByte.length > 1) {
-                        MAC_ADDRESS = (parseByte(macByte[0]) + ":" + parseByte(macByte[1]) + ":" +
-                                parseByte(macByte[2]) + ":" + parseByte(macByte[3]) + ":" +
-                                parseByte(macByte[4]) + ":" + parseByte(macByte[5])).toUpperCase();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return MAC_ADDRESS;
-    }
-
-    public static String getLocalHostName() {
-        try {
-            return getAddress().getHostName();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "Unknown";
-    }
-
     private static InetAddress getAddress() {
         if (address == null) {
             String name = System.getenv(ENV_NET_INTERFACE_NAME);

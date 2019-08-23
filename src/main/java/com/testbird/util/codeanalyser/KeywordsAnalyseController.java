@@ -28,14 +28,15 @@ public class KeywordsAnalyseController {
     private static final String ERR_REPO_TYPE_NOT_SUPPORTED = "Src repo type not supported: %s";
     private static final String ERR_NO_FILE_TYPES = "No file types to search.";
 
-    private static ThreadPoolExecutor searchTaskExecutorPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(Config.getMaxTaskCount(), new WorkerThreadFactory("Keywords-Analysis"));
-    private static ConcurrentHashMap<String, SearchTask> runningTasks = new ConcurrentHashMap<>();
+    private static ThreadPoolExecutor searchTaskExecutorPool = (ThreadPoolExecutor)Executors.newFixedThreadPool(Config.getMaxTaskCount(),
+            new WorkerThreadFactory("Keywords-Analysis"));//执行任务的线程池
+    private static ConcurrentHashMap<String, SearchTask> runningTasks = new ConcurrentHashMap<>();//当前的执行任务列表
 
-    public void searchKeywordsResp(Request request, Response response) {
-        SearchKeywordsResponse respData = request.getBodyAs(SearchKeywordsResponse.class);
-        LOGGER.info("Search keywords response: {}", JsonTransfer.toJsonFormatString(respData));
-    }
-
+    /**
+     * 扫描关键字
+     * @param request
+     * @param response
+     */
     public void searchKeywords(Request request, Response response) {
         // {"type":"file", "key": "xxx", "keywords":[], "regExpKeywords": [], "href"="file.lab.tb/upload/xxxx.zip"}
         // {
@@ -47,14 +48,8 @@ public class KeywordsAnalyseController {
         LOGGER.debug("Search request:\n{}", bodyStr);
         int activeTaskCount = searchTaskExecutorPool.getActiveCount();
         LOGGER.debug("Active task count: {}", activeTaskCount);
-        // if (activeTaskCount >= Config.getMaxTaskCount()) {
-        //     LOGGER.info("Max task count, ignore new task.");
-        //     response.setResponseStatus(new HttpResponseStatus(503, "Maximum tasks"));
-        //     return;
-        // }
-
         try {
-            SearchKeywordsRequest reqData = request.getBodyAs(SearchKeywordsRequest.class, "Request body error.");
+            SearchKeywordsRequest reqData = request.getBodyAs(SearchKeywordsRequest.class, "Request body error.");//把请求的json数据转为对象
             validateRequest(reqData);
 
             preHandleRequest(reqData);
@@ -78,6 +73,11 @@ public class KeywordsAnalyseController {
         }
     }
 
+    /**
+     * 停止扫描
+     * @param request
+     * @param response
+     */
     public void stopSearchKeywords(Request request, Response response) {
         // {"key": "xxx"}
         ByteBuf bf = request.getBody();
@@ -105,10 +105,18 @@ public class KeywordsAnalyseController {
         }
     }
 
+    /**
+     * 从任务列表中移除任务
+     * @param key
+     */
     public static void removeTask(String key) {
         runningTasks.remove(key);
     }
 
+    /**
+     * 预处理并验证请求
+     * @param request
+     */
     public static void preHandleRequest(SearchKeywordsRequest request) {
 
         request.ignoreKeywords = preHandleList(request.ignoreKeywords);
@@ -120,10 +128,6 @@ public class KeywordsAnalyseController {
         if (null != request.ignoreFiles) {
             LOGGER.info("{} Ignore files: {}", request.key, Arrays.toString(request.ignoreFiles.toArray()));
         }
-        // request.ignoreFileTypes = preHandleList(request.ignoreFileTypes);
-        // if (null != request.ignoreFileTypes) {
-        //     LOGGER.info("{} Ignore file types: {}", request.key, Arrays.toString(request.ignoreFileTypes.toArray()));
-        // }
 
         boolean bAnyKeywords = false;
         for (KeywordInfo keywordInfo : request.keywordInfos) {
@@ -146,7 +150,7 @@ public class KeywordsAnalyseController {
         if (null != request.ignoreFiles) {
             if (request.type.equals("repo")) {
                 String repoAddr = request.repoInfo.repoAdrr;
-                repoAddr = StringUtils.stripEnd(repoAddr, "/");
+                repoAddr = StringUtils.stripEnd(repoAddr, "/");//去掉末尾的/
                 repoAddr = repoAddr.toLowerCase();
 
                 List<String> ignoreFiles = new LinkedList<>();
@@ -169,16 +173,26 @@ public class KeywordsAnalyseController {
         }
     }
 
+    /**
+     * 处理list数据
+     * @param list
+     * @return
+     */
     static List<String> preHandleList(List<String> list) {
         if (null != list) {
-            list.removeIf(s -> StringUtils.isEmpty(StringUtils.trim(s)));
-            list.replaceAll(String::toLowerCase);
-            list.replaceAll(String::trim);
+            list.removeIf(s -> StringUtils.isEmpty(StringUtils.trim(s)));//移除isEmpty的数据
+            list.replaceAll(String::toLowerCase);//把list中的数据全部变为小写
+            list.replaceAll(String::trim);//把list中的数据全部去掉两边空格
             list = removeDuplicates(list);
         }
         return list;
     }
 
+    /**
+     * 移除重复的数据
+     * @param list
+     * @return
+     */
     static List<String> removeDuplicates(List<String> list) {
         Set<String> set = new TreeSet<>((s1, s2) -> StringUtils.compareIgnoreCase(s1, s2));
         set.addAll(list);
@@ -187,6 +201,10 @@ public class KeywordsAnalyseController {
         return list;
     }
 
+    /**
+     * 验证请求参数是否正确
+     * @param reqData
+     */
     private void validateRequest(SearchKeywordsRequest reqData) {
         if (StringUtils.isEmpty(reqData.key)) {
             throw new BadRequestException("No request identifier");
@@ -232,6 +250,11 @@ public class KeywordsAnalyseController {
         }
     }
 
+    /**
+     * 将Collection<String> 转成 Pattern[]
+     * @param regExps
+     * @return
+     */
     public static Pattern[] getRegExPatterns(Collection<String> regExps) {
         Pattern[] patterns = null;
         if (null != regExps) {
@@ -240,6 +263,12 @@ public class KeywordsAnalyseController {
         return patterns;
     }
 
+    /**
+     * 从压缩文件中搜索关键字
+     * @param reqData
+     * @param response
+     * @throws BadRequestException
+     */
     private void searchKeywordsInFile(SearchKeywordsRequest reqData, Response response) throws BadRequestException {
         SearchTask searchTask = new FileSearchTask(reqData);
         runningTasks.put(reqData.key, searchTask);
@@ -249,6 +278,12 @@ public class KeywordsAnalyseController {
         response.setResponseCreated();
     }
 
+    /**
+     * 从svn仓库里搜索关键字
+     * @param reqData
+     * @param response
+     * @throws BadRequestException
+     */
     private void searchKeywordsInRepo(SearchKeywordsRequest reqData, Response response) throws BadRequestException {
         reqData.repoInfo.repoType = "svn";
         SearchTask searchTask = new RepoSearchTask(reqData);
@@ -260,6 +295,11 @@ public class KeywordsAnalyseController {
     }
 
 
+    /**
+     * 验证svn仓库信息
+     * @param reqData
+     * @throws BadRequestException
+     */
     private void validateRepoInfo(SearchKeywordsRequest reqData) throws BadRequestException {
         if (null == reqData.repoInfo) {
             throw new BadRequestException(ERR_NOTHING_TO_SEARCH);

@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
 
 import static com.testbird.util.codeanalyser.Config.getTaskDownloadSrcDir;
 
+/**
+ * 关键字扫描的核心类
+ */
 public class SrcCodeAnalyser implements KeywordsAnalyser {
     private static final Logger logger = LoggerFactory.getLogger(SrcCodeAnalyser.class);
 
@@ -65,6 +68,9 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         }
     }
 
+    /**
+     * 重置相关的变量
+     */
     private void resetLineState() {
         currentIdx = -1;
         validStartIdx = -1;
@@ -90,6 +96,12 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
 
     }
 
+    /**
+     *
+     * @param filePath
+     * @param zipFilePath zip file path if it's searching in the unzipped directory
+     * @throws SearchCanceledException
+     */
     @Override
     public void searchKeywords(String filePath, String zipFilePath) throws SearchCanceledException {
 
@@ -169,6 +181,11 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         }
     }
 
+    /**
+     * 是否支持注解
+     * @param fileType
+     * @return
+     */
     private boolean isCommentSupported(String fileType) {
         boolean b = false;
         switch (fileType) {
@@ -950,6 +967,17 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         regMatchKeywords(realFilePath, line, lineNumber, 0, line.length());
 
     }
+
+    /**
+     * 正则表达式匹配扫描关键字
+     * @param realFilePath
+     * @param line
+     * @param lineNumber
+     * @param startPos
+     * @param endPos
+     * @throws IOException
+     * @throws SearchCanceledException
+     */
     private void regMatchKeywords(String realFilePath, String line, int lineNumber, int startPos, int endPos) throws IOException, SearchCanceledException {
         if(line.substring(startPos, endPos).trim().isEmpty()) {
             return;
@@ -1082,6 +1110,11 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         }
     }
 
+    /**
+     * 根据后缀获取文件类型
+     * @param fileExt
+     * @return
+     */
     private static String guessSourceFileType(String fileExt) {
         KeywordsAnalysisConfig config = Config.getKeywordsAnalysisConfig();
         fileExt = fileExt.toLowerCase();
@@ -1130,11 +1163,6 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
             br.mark(10 * 1024 * 1024); // 10m
             // before lines
             if (null != lastLine) {
-                // if (lastLine.length() <= maxLineLen) {
-                //     truncLine = lastLine;
-                // } else {
-                //     truncLine = lastLine.substring(0, maxLineLen);
-                // }
                 if (beforeLines.size() == extraLineCnt) {
                     beforeLines.remove(0);
                     beforeLines.add(lastLine);
@@ -1148,18 +1176,10 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
             int cnt = 0;
             String tmpLine;
             while (cnt++ < extraLineCnt && null != (tmpLine = br.readLine())) {
-                // if (tmpLine.length() <= maxLineLen) {
-                //     truncLine = tmpLine;
-                // } else {
-                //     truncLine = tmpLine.substring(0, maxLineLen);
-                // }
                 afterLines.add(tmpLine);
             }
             br.reset();
 
-            // beforeJointLine = StringUtils.join(beforeLines, "\n");
-            // afterJointLine = StringUtils.join(afterLines, "\n");
-            // jointExtraLine = beforeJointLine + afterJointLine;
         }
     }
 
@@ -1169,31 +1189,13 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         }
     }
 
-    // public static SearchKeywordsResult searchKeywordsInGitRepo(String srcRepoUrl, String userName, String password,
-    //                                                            List<KeywordInfo> keywordInfos, ResultAttr resultAttr) throws IOException {
-    //     String localDir = genTmpDir();
-    //     long start = System.currentTimeMillis();
-    //     SrcDownloadResult srcDownloadResult = SrcDownloader.downloadGitRepo(srcRepoUrl, userName, password, localDir);
-    //     long end = System.currentTimeMillis();
-    //     logger.info("Download time: {}s", (end - start) / 1000);
-
-    //     SearchKeywordsResult result;
-    //     try {
-    //         if (srcDownloadResult.success) {
-    //             result = doSearch(localDir, keywordInfos, null, resultAttr);
-    //         } else {
-    //             throw new DownloadException(srcDownloadResult.errMsg);
-    //         }
-    //     } finally {
-    //         FileUtils.deleteQuietly(new File(localDir));
-    //     }
-    //     if (null != result) {
-    //         result.measures.downloadTime = end - start;
-    //         result.repoVersion = srcDownloadResult.version;
-    //     }
-    //     return result;
-    // }
-
+    /**
+     * 扫描关键字
+     * @param searchTask
+     * @return
+     * @throws IOException
+     * @throws SearchCanceledException
+     */
     public SearchKeywordsResult searchKeywordsInSvnRepo(SearchTask searchTask) throws IOException, SearchCanceledException {
         this.searchTask = searchTask;
 
@@ -1201,6 +1203,7 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         baseDir = new File(localDir);
         long start = System.currentTimeMillis();
         SearchKeywordsRequest request = searchTask.request;
+        //下载svn仓库
         SrcDownloadResult srcDownloadResult = SrcDownloader.downloadSvnRepo(searchTask.request.repoInfo.repoAdrr, request.repoInfo.repoVersion,
                 request.repoInfo.userName, request.repoInfo.password, localDir, searchTask);
         checkCanceled();
@@ -1219,14 +1222,16 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         if (null != result) {
             result.measures.downloadTime = end - start;
             if (!searchTask.canceled) {
+                //获取lastRepoVersion跟当前版本之间的log信息
                 result.versionLogs = getSvnVersionLogs(localDir, request.repoInfo.lastRepoVersion, srcDownloadResult.version, request.repoInfo.userName, request.repoInfo.password);
+                //获取当前版本的更新时间
                 result.lastChangeTime = getSvnLastChangeTimestamp(localDir);
             }
             if (result.versionLogs != null && result.versionLogs.length() > 0) {
                 final Pattern pattern = Pattern.compile("-+\\s*r(\\d+)\\s+\\|[\\S\\s]*");
                 final Matcher matcher = pattern.matcher(result.versionLogs);
                 if (matcher.matches()) {
-                    result.repoVersion = matcher.group(1);
+                    result.repoVersion = matcher.group(1);//从logs信息中获取最后一次提交的版本为当前版本
                 }
             }
             if (StringUtils.isEmpty(result.repoVersion)) {
@@ -1263,6 +1268,16 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
     some upate
     */
     private static final int DEFAULT_VERSION_HISTORY_CNT = 50;
+
+    /**
+     * 获取版本之间的change logs
+     * @param svnWorkDir
+     * @param startVersion
+     * @param endVersion
+     * @param userName
+     * @param password
+     * @return
+     */
     private static String getSvnVersionLogs(String svnWorkDir, String startVersion, String endVersion, String userName, String password) {
         if (StringUtils.isEmpty(startVersion)) {
             int tmpVersion = 1;
@@ -1345,6 +1360,11 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         return timestamp;
     }
 
+    /**
+     * 开始扫描关键字
+     * @throws IOException
+     * @throws SearchCanceledException
+     */
     private void doSearch() throws IOException, SearchCanceledException {
         long start = System.currentTimeMillis();
         searchKeywordsInDir();
@@ -1359,6 +1379,12 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         return searchKeywordsInDir();
     }
 
+    /**
+     * 扫描并返回扫描结果
+     * @return
+     * @throws IOException
+     * @throws SearchCanceledException
+     */
     private SearchKeywordsResult searchKeywordsInDir() throws IOException, SearchCanceledException {
         SearchKeywordsRequest request = searchTask.request;
         ResultAttr resultAttr = request.resultAttr;
@@ -1426,6 +1452,12 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         return false;
     }
 
+    /**
+     * 文件是否可以扫描（如果在忽略列表里，则返回false）
+     * @param file
+     * @param ignoreFiles
+     * @return
+     */
     private boolean filterCustomIgnoreFiles(File file, List<String> ignoreFiles) {
         if (null != ignoreFiles) {
             String baseDirPath = baseDir.getAbsolutePath();
@@ -1460,16 +1492,12 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
         return false;
     }
 
-    // private static boolean filterCustomIgnoreFileTypes(File file, List<String> ignoreFileTypes) {
-    //     if (null != ignoreFileTypes) {
-    //         String ext = FilenameUtils.getExtension(file.getName()).toLowerCase();
-    //         if (ignoreFileTypes.contains(ext)) {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
-
+    /**
+     * 递归扫描文件
+     * @param file
+     * @param zipFilePath
+     * @throws SearchCanceledException
+     */
     private void searchKeywordsInFile(File file, String zipFilePath) throws SearchCanceledException {
         if (searchTask.canceled) {
             return;
@@ -1501,46 +1529,6 @@ public class SrcCodeAnalyser implements KeywordsAnalyser {
             // treat it as text file whatever
             checkCanceled();
             searchKeywords(filePath, null);
-                // String tmpDir = Config.genTmpDir();
-                // File newBaseDir = new File(tmpDir);
-                // // List<File> files = ZipUtils.unZipFileTo(new File(filePath), newBaseDir);
-                // // files.stream().filter(SrcCodeAnalyser::filterBuildInIgnoreFile).forEach(f -> searchKeywordsInFile(newBaseDir, f, searchTask, result, jsonGenerator, newZipFilePath));
-                // String baseAbsPath = baseDir.getAbsolutePath();
-                // int baseDirLen = baseAbsPath.endsWith("/") ? baseAbsPath.length() : baseAbsPath.length() + 1;
-                // String newZipFilePath;
-                // // zip in zip
-                // if (null != zipFilePath) {
-                //     newZipFilePath = Paths.get(zipFilePath, filePath.substring(baseDirLen)).toString();
-                // } else {
-                //     newZipFilePath = filePath.substring(baseDirLen);
-                // }
-
-                // try {
-                //     if (FileUtil.isCompressedFile(fileType)) {
-                //         if (decompressFile(file, fileType, tmpDir)) {
-                //             Arrays.stream(newBaseDir.listFiles())
-                //                     .filter(SrcCodeAnalyser::filterBuildInIgnoreFile)
-                //                     .forEach(f -> {
-                //                         if (!searchTask.canceled) {
-                //                             searchKeywordsInFile(newBaseDir, f, searchTask, result, jsonGenerator, newZipFilePath);
-                //                         }
-                //                     });
-
-                //         }
-                //     } else {
-                //         logger.info("Ignore file of type {}: {}", fileType, filePath);
-                //     }
-                // } catch (Exception e) {
-                //     logger.warn("Failed to handle file {}: {}, {}", filePath, e.getMessage(), e.getStackTrace());
-                // } finally {
-                //     FileUtils.deleteQuietly(newBaseDir);
-                // }
-                // return;
-            // enable later
-            // if ("class".equalsIgnoreCase(ext) && ByteCodeAnalyser.isClassFile(filePath)) {
-            //     new ByteCodeAnalyser().searchKeywords(baseDir, filePath, keywords, keywordsPatterns, keywordInfos);
-            //     return;
-            // }
         }
     }
 

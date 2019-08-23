@@ -58,40 +58,6 @@ public class RuntimeEnv {
         return results;
     }
 
-    public static List<String> runShell2(String command, String workDir) {
-        List<String> results = new ArrayList<>();
-        ProcessBuilder builder = new ProcessBuilder();
-        Process p = null;
-        if (SystemUtils.IS_OS_WINDOWS) {
-            builder.command("cmd", "/c", command);
-        } else {
-            builder.command("sh", "-c", command);
-        }
-        try {
-            if (workDir != null) {
-                builder.directory(new File(workDir));
-            }
-            builder.redirectErrorStream(true);
-            p = builder.start();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                String line;
-                while (null != (line = br.readLine())) {
-                    results.add(line);
-                }
-            } catch (IOException e) {
-                mLogger.error("runShell2 IOException", e);
-            }
-
-        } catch (Exception e) {
-            mLogger.error("runShell2 Exception", e);
-        } finally {
-            if (p != null && p.isAlive()) {
-                p.destroy();
-            }
-        }
-        return results;
-    }
-
     public static String getSystemId() {
         if (IS_OS_LINUX) {
             return getLinuxSystemId();

@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -20,6 +19,9 @@ import java.util.regex.Pattern;
 import static com.testbird.util.codeanalyser.KeywordsAnalyseController.getRegExPatterns;
 import static com.testbird.util.codeanalyser.KeywordsAnalyseController.preHandleList;
 
+/**
+ * 配置文件类
+ */
 public class Config {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     private static final String TASK_DIR = "tasks";
@@ -33,7 +35,7 @@ public class Config {
 
     private static String mRespNotifUrl;
     private static final String KEY_RESPONSE_NOTIF_URL = "KEYWORDS_SCANNER_RESPONSE_NOTIF_URL";
-    private static final String DEFAULT_RESPONSE_NOTIF_URL = "http://quail.lab.tb/api/scanner/scan/execution/result/";
+    private static final String DEFAULT_RESPONSE_NOTIF_URL = "http://quail.lab.tb/api/scanner/scan/execution/result/";//默认的response上传地址
 
     private static KeywordsAnalysisConfig keywordsAnalysisConfig;
     private static final int DEFAULT_MAX_TASK_COUNT = 4;

@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * 扫描结果文件内容
+ */
 // Search keywords result file
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SearchKeywordsResult {
@@ -41,6 +44,9 @@ public class SearchKeywordsResult {
     }
 }
 
+/**
+ * 扫描结果的概括
+ */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 class SearchKeywordsMeasures {
     SearchKeywordsMeasures() {}

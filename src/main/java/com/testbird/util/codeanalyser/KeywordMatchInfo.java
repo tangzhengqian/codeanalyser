@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * 关键字扫描详细结果
+ */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class KeywordMatchInfo {
     @JsonProperty(value = "file")

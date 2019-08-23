@@ -13,10 +13,19 @@ import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 文件下载
+ */
 public class Downloader {
     private static final Logger LOGGER = LoggerFactory.getLogger(Downloader.class);
     private static final Map<String, String> FILE_NAME_LOCK_MAP = new ConcurrentHashMap<>();
 
+    /**
+     * 同步下载（使用了文件锁）
+     * @param remote
+     * @param local
+     * @return
+     */
     public static boolean downloadSync(String remote, String local) {
         synchronized (getFileNameLock(local)) {
             return download(remote, local);

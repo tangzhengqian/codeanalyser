@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import static com.testbird.util.codeanalyser.Config.MAX_ANALYSE_TIME_IN_MINUTES;
 
+/**
+ * svn仓库扫描任务
+ */
 public class RepoSearchTask extends SearchTask {
     private static final Logger logger = LoggerFactory.getLogger(SearchTask.class);
     public RepoSearchTask(SearchKeywordsRequest request) {

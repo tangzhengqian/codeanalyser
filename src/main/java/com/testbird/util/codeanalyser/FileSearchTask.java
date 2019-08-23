@@ -13,6 +13,9 @@ import java.util.concurrent.TimeUnit;
 import static com.testbird.util.codeanalyser.Config.MAX_ANALYSE_TIME_IN_MINUTES;
 import static com.testbird.util.codeanalyser.Config.getTaskBaseDir;
 
+/**
+ * zip文件扫描任务
+ */
 public class FileSearchTask extends SearchTask {
     private static final Logger logger = LoggerFactory.getLogger(FileSearchTask.class);
     public FileSearchTask(SearchKeywordsRequest request) {

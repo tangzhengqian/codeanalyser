@@ -14,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by penghongqin on 16-4-11.
+ * 文件上传工具类
  */
 public class FileServerUploadHelper {
     private static final Logger sLogger = LoggerFactory.getLogger(FileServerUploadHelper.class);
